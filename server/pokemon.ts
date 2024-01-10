@@ -1,4 +1,4 @@
-export const pokemonNames: { [key: string]: string } = {
+const pokemonNames: { [key: string]: string } = {
   bulbasaur: "Bulbasaur",
   ivysaur: "Ivysaur",
   venusaur: "Venusaur",
@@ -1261,3 +1261,5 @@ export const pokemonNames: { [key: string]: string } = {
   "terapagos-terastal": "Terapagos Terastal",
   "terapagos-stellar": "Terapagos Stellar",
 };
+
+export default pokemonNames;
