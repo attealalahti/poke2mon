@@ -1,15 +1,20 @@
-import { useState, useEffect, FormEvent, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { io } from "socket.io-client";
 import Pokemon from "./components/Pokemon";
 import Turn, { TurnProps } from "./components/Turn";
 import { ConnectionProps } from "./components/Connection";
+import { pokemonNames } from "./pokemonNames";
 
+const pokemonList = Object.keys(pokemonNames).map((key) => ({
+  key,
+  name: pokemonNames[key],
+}));
 const socket = io("http://localhost:3000");
 
 export type Color = "primary" | "secondary" | "neutral";
 
 function App() {
-  const [pokemon, setPokemon] = useState<string>("");
+  const [searchText, setSearchText] = useState<string>("");
   const [turns, setTurns] = useState<TurnProps[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -30,13 +35,12 @@ function App() {
     }
   }, [isLoading]);
 
-  const sendPokemon = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const sendPokemon = (pokemonKey: string, pokemonName: string) => {
     if (isLoading) return;
 
     socket.emit(
       "pokemon",
-      pokemon,
+      pokemonKey,
       (
         value:
           | { pokemon: string; connections: ConnectionProps[]; error: false }
@@ -55,10 +59,11 @@ function App() {
           setTurns((prev) => [newTurn, ...prev]);
         }
         setIsLoading(false);
+        setSearchText("");
       },
     );
 
-    setPokemon("");
+    setSearchText(pokemonName);
     setIsLoading(true);
   };
 
@@ -69,29 +74,46 @@ function App() {
           POKÉ<span className="text-primary">2</span>MON
         </h1>
       </div>
-      <form
-        onSubmit={sendPokemon}
-        className="join flex w-full flex-row font-semibold"
-      >
+      <div className="relative flex w-full flex-row font-semibold">
         <input
-          className="input join-item input-bordered flex-1"
-          type="text"
-          value={pokemon}
-          onChange={(e) => setPokemon(e.target.value)}
+          className="input input-bordered flex-1"
+          type="search"
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
           disabled={isLoading}
           ref={inputRef}
+          placeholder="Search for Pokémon..."
         />
-        <button
-          className="btn btn-primary join-item text-primary-content"
-          disabled={isLoading}
-        >
-          {!isLoading ? (
-            <span>Submit</span>
-          ) : (
-            <span className="loading loading-dots" />
+        {!isLoading &&
+          searchText.length >= 3 &&
+          pokemonList.some((pokemon) =>
+            pokemon.name.toLowerCase().includes(searchText.toLowerCase()),
+          ) && (
+            <div className="absolute top-full z-20 w-full px-2">
+              <div className="w-full border-x border-t border-black bg-base-100">
+                {pokemonList
+                  .filter((pokemon) =>
+                    pokemon.name
+                      .toLowerCase()
+                      .includes(searchText.toLowerCase()),
+                  )
+                  .slice(0, 7)
+                  .map((pokemon, index) => (
+                    <button
+                      key={index}
+                      onClick={() => sendPokemon(pokemon.key, pokemon.name)}
+                      className="w-full border-b border-black p-2 text-left hover:bg-primary hover:text-primary-content focus:bg-primary focus:text-primary-content"
+                    >
+                      {pokemon.name}
+                    </button>
+                  ))}
+              </div>
+            </div>
           )}
-        </button>
-      </form>
+        {isLoading && (
+          <span className="loading loading-dots absolute right-4 top-1/3" />
+        )}
+      </div>
       {error !== null && (
         <div role="alert" className="alert alert-error">
           <svg
