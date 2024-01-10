@@ -90,7 +90,7 @@ function App() {
             pokemon.name.toLowerCase().includes(searchText.toLowerCase()),
           ) && (
             <div className="absolute top-full z-20 w-full px-2">
-              <div className="w-full border-x border-t border-black bg-base-100">
+              <div className="w-full border-x border-t border-base-content bg-base-100">
                 {pokemonList
                   .filter((pokemon) =>
                     pokemon.name
@@ -102,7 +102,7 @@ function App() {
                     <button
                       key={index}
                       onClick={() => sendPokemon(pokemon.key, pokemon.name)}
-                      className="w-full border-b border-black p-2 text-left hover:bg-primary hover:text-primary-content focus:bg-primary focus:text-primary-content"
+                      className="w-full border-b border-base-content p-2 text-left hover:bg-primary hover:text-primary-content focus:bg-primary focus:text-primary-content"
                     >
                       {pokemon.name}
                     </button>
