@@ -1,8 +1,10 @@
 search auto-fill
-git
 zod validation on both sides
 monorepo?
 ts-node-dev alternative / fix
 timer
 matchmaking
 lifelines
+database
+how to play
+win/loss record
