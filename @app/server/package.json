@@ -19,6 +19,7 @@
   "dependencies": {
     "@poke2mon/data": "^1.0.0",
     "@poke2mon/server": "^1.0.0",
+    "@poke2mon/types": "^1.0.0",
     "axios": "^1.6.5",
     "axios-cache-interceptor": "^1.4.1",
     "express": "^4.18.2",

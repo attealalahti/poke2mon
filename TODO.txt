@@ -1,4 +1,3 @@
-zod validation on both sides
 timer
 matchmaking
 lifelines

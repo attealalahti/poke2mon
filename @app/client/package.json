@@ -13,6 +13,7 @@
   "dependencies": {
     "@poke2mon/data": "^1.0.0",
     "@poke2mon/server": "^1.0.0",
+    "@poke2mon/types": "^1.0.0",
     "autoprefixer": "^10.4.16",
     "postcss": "^8.4.33",
     "react": "^18.2.0",

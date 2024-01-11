@@ -1,9 +1,9 @@
 {
-  "name": "@poke2mon/data",
+  "name": "@poke2mon/types",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/pokemon.js",
-  "types": "dist/pokemon.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "start": "tsc && node dist",
     "build": "tsc --build --verbose"
@@ -11,11 +11,10 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "@poke2mon/data": "*",
-    "@poke2mon/server": "^1.0.0"
-  },
   "devDependencies": {
     "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "zod": "^3.22.4"
   }
 }

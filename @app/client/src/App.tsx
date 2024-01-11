@@ -1,15 +1,22 @@
 import { useState, useEffect, useRef } from "react";
 import { io } from "socket.io-client";
+import type { Socket } from "socket.io-client";
 import Pokemon from "./components/Pokemon";
 import Turn, { TurnProps } from "./components/Turn";
-import { ConnectionProps } from "./components/Connection";
 import pokemonNames from "@poke2mon/data";
+import type {
+  ClientToServerEvents,
+  ServerToClientEvents,
+} from "@poke2mon/types";
+import { pokemonCallbackValueValidator } from "@poke2mon/types";
 
 const pokemonList = Object.keys(pokemonNames).map((key) => ({
   key,
   name: pokemonNames[key],
 }));
-const socket = io("http://localhost:3000");
+const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io(
+  "http://localhost:3000",
+);
 
 export type Color = "primary" | "secondary" | "neutral";
 
@@ -38,30 +45,26 @@ function App() {
   const sendPokemon = (pokemonKey: string, pokemonName: string) => {
     if (isLoading) return;
 
-    socket.emit(
-      "pokemon",
-      pokemonKey,
-      (
-        value:
-          | { pokemon: string; connections: ConnectionProps[]; error: false }
-          | { error: true; errorMessage: string },
-      ) => {
-        if (value.error) {
-          setError(value.errorMessage);
-        } else {
-          setError(null);
-          const newTurn: TurnProps = {
-            pokemon: value.pokemon,
-            color: "primary",
-            number: turns.length + 2,
-            connections: value.connections,
-          };
-          setTurns((prev) => [newTurn, ...prev]);
-        }
-        setIsLoading(false);
-        setSearchText("");
-      },
-    );
+    socket.emit("pokemon", pokemonKey, (value) => {
+      const parseResult = pokemonCallbackValueValidator.safeParse(value);
+      if (!parseResult.success) {
+        setError("Server Error - Try again");
+      } else if (value.error) {
+        setError(value.errorMessage);
+      } else {
+        setError(null);
+        const newTurn: TurnProps = {
+          pokemon: value.pokemon,
+          color: "primary",
+          number: turns.length + 2,
+          connections: value.connections,
+        };
+        setTurns((prev) => [newTurn, ...prev]);
+      }
+
+      setIsLoading(false);
+      setSearchText("");
+    });
 
     setSearchText(pokemonName);
     setIsLoading(true);

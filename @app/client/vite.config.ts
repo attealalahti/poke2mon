@@ -5,6 +5,6 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
-    include: ["@poke2mon/data"],
+    include: ["@poke2mon/data", "@poke2mon/types"],
   },
 });

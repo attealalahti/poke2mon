@@ -3,11 +3,14 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import { Pokemon, PokemonClient } from "pokenode-ts";
 import pokemonNames from "@poke2mon/data";
-
-type Connection = {
-  name: string;
-  count: number;
-};
+import type {
+  Connection,
+  ClientToServerEvents,
+  ServerToClientEvents,
+  InterServerEvents,
+  SocketData,
+} from "@poke2mon/types";
+import { pokemonParameterValidator } from "@poke2mon/types";
 
 type Game = {
   previousPokemon: Pokemon;
@@ -17,29 +20,6 @@ type Game = {
 
 type Db = {
   [key: string]: Game;
-};
-
-type ServerToClientEvents = {
-  noArg: () => void;
-  basicEmit: (a: number, b: string, c: Buffer) => void;
-  withAck: (d: string, callback: (e: number) => void) => void;
-};
-
-type ClientToServerEvents = {
-  pokemon: (
-    name: string,
-    callback: (
-      value:
-        | { error: false; pokemon: string; connections: Connection[] }
-        | { error: true; errorMessage: string }
-    ) => void
-  ) => void;
-};
-
-type InterServerEvents = {};
-
-type SocketData = {
-  gameId: string;
 };
 
 const app = express();
@@ -62,6 +42,10 @@ const api = new PokemonClient();
 io.on("connection", async (socket) => {
   console.log(`connected to socket ${socket.id}`);
 
+  socket.on("disconnect", () => {
+    console.log(`${socket.id} socket disconnected`);
+  });
+
   try {
     const game: Game = {
       previousPokemon: await api.getPokemonByName("pikachu"),
@@ -71,6 +55,8 @@ io.on("connection", async (socket) => {
 
     socket.on("pokemon", async (name, callback) => {
       try {
+        pokemonParameterValidator.parse(name);
+
         const newPokemon = await api.getPokemonByName(name);
         const newConnections = findConnections(
           game.previousPokemon,
@@ -149,7 +135,10 @@ io.on("connection", async (socket) => {
         });
       } catch (error) {
         //console.log(error);
-        callback({ error: true, errorMessage: `Invalid Pokemon ${name}` });
+        callback({
+          error: true,
+          errorMessage: `Invalid Pokemon ${name}`,
+        });
       }
     });
   } catch (error) {
@@ -160,6 +149,7 @@ io.on("connection", async (socket) => {
 httpServer.listen(3000);
 console.log("socket.io server listening on http://localhost:3000");
 
+// Sort connections by type of connection and connection count
 const sortConnections = (connections: Connection[]): void => {
   connections.sort(
     (a, b) => getOrderByFirstLetter(a.name) - getOrderByFirstLetter(b.name)
@@ -167,6 +157,7 @@ const sortConnections = (connections: Connection[]): void => {
   connections.sort((a, b) => b.count - a.count);
 };
 
+// Helper function for sorting Type -> Ability -> Move
 const getOrderByFirstLetter = (word: string) => {
   if (word.charAt(0) === "T") {
     return 1;
