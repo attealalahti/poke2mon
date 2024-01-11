@@ -2,7 +2,7 @@ import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import { Pokemon, PokemonClient } from "pokenode-ts";
-import pokemonNames from "./pokemon";
+import pokemonNames from "@poke2mon/data";
 
 type Connection = {
   name: string;

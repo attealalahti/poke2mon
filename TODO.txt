@@ -1,5 +1,4 @@
 zod validation on both sides
-monorepo?
 timer
 matchmaking
 lifelines

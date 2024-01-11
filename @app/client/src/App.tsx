@@ -3,7 +3,7 @@ import { io } from "socket.io-client";
 import Pokemon from "./components/Pokemon";
 import Turn, { TurnProps } from "./components/Turn";
 import { ConnectionProps } from "./components/Connection";
-import pokemonNames from "./pokemonNames";
+import pokemonNames from "@poke2mon/data";
 
 const pokemonList = Object.keys(pokemonNames).map((key) => ({
   key,
