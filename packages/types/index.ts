@@ -6,12 +6,6 @@ const connectionValidator = z.object({
 });
 export type Connection = z.infer<typeof connectionValidator>;
 
-export type ServerToClientEvents = {
-  noArg: () => void;
-  basicEmit: (a: number, b: string, c: Buffer) => void;
-  withAck: (d: string, callback: (e: number) => void) => void;
-};
-
 export const pokemonParameterValidator = z.string();
 type PokemonParameter = z.infer<typeof pokemonParameterValidator>;
 
@@ -28,6 +22,20 @@ export const pokemonCallbackValueValidator = z
     })
   );
 type PokemonCallbackValue = z.infer<typeof pokemonCallbackValueValidator>;
+
+export const isStartingPlayerValidator = z.boolean();
+type IsStartingPlayer = z.infer<typeof isStartingPlayerValidator>;
+
+export const opponentTurnValidator = z.object({
+  pokemon: z.string(),
+  connections: connectionValidator.array(),
+});
+type OpponentTurn = z.infer<typeof opponentTurnValidator>;
+
+export type ServerToClientEvents = {
+  gameStart: (isStartingPlayer: IsStartingPlayer) => void;
+  opponentTurn: (value: OpponentTurn) => void;
+};
 
 export type ClientToServerEvents = {
   pokemon: (

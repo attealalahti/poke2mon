@@ -11,15 +11,14 @@ import type {
   SocketData,
 } from "@poke2mon/types";
 import { pokemonParameterValidator } from "@poke2mon/types";
+import { randomUUID } from "crypto";
 
 type Game = {
+  id: string;
   previousPokemon: Pokemon;
   usedPokemon: string[];
   connections: Connection[];
-};
-
-type Db = {
-  [key: string]: Game;
+  players: string[];
 };
 
 const app = express();
@@ -35,7 +34,9 @@ const io = new Server<
   },
 });
 
-const db: Db = {};
+const startingPokemon = "pikachu";
+
+const db: { [key: string]: Game } = {};
 
 const api = new PokemonClient();
 
@@ -47,13 +48,35 @@ io.on("connection", async (socket) => {
   });
 
   try {
-    const game: Game = {
-      previousPokemon: await api.getPokemonByName("pikachu"),
-      usedPokemon: ["pikachu"],
-      connections: [],
-    };
+    const existingGameId = findGameToJoin();
+    if (existingGameId) {
+      db[existingGameId]?.players.push(socket.id);
+      socket.join(existingGameId);
+      socket.data.gameId = existingGameId;
+
+      const thisPlayerStarts = Math.random() > 0.5;
+      socket.broadcast.emit("gameStart", !thisPlayerStarts);
+      socket.emit("gameStart", thisPlayerStarts);
+    } else {
+      const newGameId = randomUUID();
+      db[newGameId] = {
+        id: newGameId,
+        previousPokemon: await api.getPokemonByName(startingPokemon),
+        usedPokemon: [startingPokemon],
+        connections: [],
+        players: [socket.id],
+      };
+      socket.join(newGameId);
+      socket.data.gameId = newGameId;
+    }
 
     socket.on("pokemon", async (name, callback) => {
+      const game = db[socket.data.gameId];
+      if (!game) {
+        callback({ error: true, errorMessage: "404 - Game missing" });
+        return;
+      }
+
       try {
         pokemonParameterValidator.parse(name);
 
@@ -128,13 +151,17 @@ io.on("connection", async (socket) => {
         game.previousPokemon = newPokemon;
         game.connections = gameConnections;
 
+        const prettyPokemonName = prettifyPokemonName(newPokemon.name);
         callback({
           error: false,
-          pokemon: prettifyPokemonName(newPokemon.name),
+          pokemon: prettyPokemonName,
+          connections: connectionsToSend,
+        });
+        socket.broadcast.emit("opponentTurn", {
+          pokemon: prettyPokemonName,
           connections: connectionsToSend,
         });
       } catch (error) {
-        //console.log(error);
         callback({
           error: true,
           errorMessage: `Invalid Pokemon ${name}`,
@@ -148,6 +175,15 @@ io.on("connection", async (socket) => {
 
 httpServer.listen(3000);
 console.log("socket.io server listening on http://localhost:3000");
+
+const findGameToJoin = () => {
+  for (const game of Object.values(db)) {
+    if (game.players.length === 1) {
+      return game.id;
+    }
+  }
+  return null;
+};
 
 // Sort connections by type of connection and connection count
 const sortConnections = (connections: Connection[]): void => {
