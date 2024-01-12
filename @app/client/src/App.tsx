@@ -13,6 +13,7 @@ import {
   pokemonCallbackValueValidator,
   isStartingPlayerValidator,
   opponentTurnValidator,
+  isWinnerValidator,
 } from "@poke2mon/types";
 
 const pokemonList = Object.keys(pokemonNames).map((key) => ({
@@ -38,6 +39,9 @@ function App() {
   const [timer, setTimer] = useState<number>(timerMax);
   const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(
     null,
+  );
+  const [gameState, setGameState] = useState<"ongoing" | "won" | "lost">(
+    "ongoing",
   );
 
   const startTimer = useCallback(() => {
@@ -101,11 +105,25 @@ function App() {
       setOpponentDisconnected(true);
     });
 
+    socket.on("gameEnd", (isWinner) => {
+      const parseResult = isWinnerValidator.safeParse(isWinner);
+      if (!parseResult.success) {
+        // Server error
+        return;
+      }
+      if (isWinner) {
+        setGameState("won");
+      } else {
+        setGameState("lost");
+      }
+    });
+
     return () => {
       socket.off("connect");
       socket.off("gameStart");
       socket.off("opponentTurn");
       socket.off("opponentDisconnected");
+      socket.off("gameEnd");
     };
   }, [turns.length, startTimer]);
 
@@ -153,7 +171,11 @@ function App() {
           POKÉ<span className="text-primary">2</span>MON
         </h1>
       </div>
-      {opponentDisconnected ? (
+      {gameState === "won" ? (
+        <div className="text-3xl font-semibold">You won!</div>
+      ) : gameState === "lost" ? (
+        <div className="text-3xl font-semibold">You lost.</div>
+      ) : opponentDisconnected ? (
         <div role="alert" className="alert alert-error">
           <svg
             xmlns="http://www.w3.org/2000/svg"

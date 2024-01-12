@@ -1,6 +1,7 @@
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import type { Socket } from "socket.io";
 import { Pokemon, PokemonClient } from "pokenode-ts";
 import pokemonNames from "@poke2mon/data/dist/pokemon";
 import type {
@@ -12,6 +13,7 @@ import type {
 } from "@poke2mon/types";
 import { pokemonParameterValidator } from "@poke2mon/types";
 import { randomUUID } from "crypto";
+import { timerMax } from "@poke2mon/data";
 
 type Game = {
   id: string;
@@ -19,7 +21,15 @@ type Game = {
   usedPokemon: string[];
   connections: Connection[];
   players: string[];
+  timer: NodeJS.Timeout | undefined;
 };
+
+type MySocket = Socket<
+  ClientToServerEvents,
+  ServerToClientEvents,
+  InterServerEvents,
+  SocketData
+>;
 
 const app = express();
 const httpServer = createServer(app);
@@ -58,8 +68,8 @@ io.on("connection", async (socket) => {
   try {
     // Find game to join, if not, create a game
     const existingGameId = findGameToJoin();
-    if (existingGameId) {
-      db[existingGameId]?.players.push(socket.id);
+    if (existingGameId && db[existingGameId]) {
+      db[existingGameId]!!.players.push(socket.id);
       socket.join(existingGameId);
       socket.data.gameId = existingGameId;
 
@@ -68,6 +78,11 @@ io.on("connection", async (socket) => {
         .in(socket.data.gameId)
         .emit("gameStart", !thisPlayerStarts);
       socket.emit("gameStart", thisPlayerStarts);
+      db[existingGameId]!!.timer = startTimer(
+        db[existingGameId]!!.timer,
+        socket,
+        thisPlayerStarts
+      );
     } else {
       const newGameId = randomUUID();
       db[newGameId] = {
@@ -76,6 +91,7 @@ io.on("connection", async (socket) => {
         usedPokemon: [startingPokemon],
         connections: [],
         players: [socket.id],
+        timer: undefined,
       };
       socket.join(newGameId);
       socket.data.gameId = newGameId;
@@ -172,6 +188,11 @@ io.on("connection", async (socket) => {
           pokemon: prettyPokemonName,
           connections: connectionsToSend,
         });
+        db[socket.data.gameId]!!.timer = startTimer(
+          db[socket.data.gameId]?.timer,
+          socket,
+          false
+        );
       } catch (error) {
         callback({
           error: true,
@@ -194,6 +215,22 @@ const findGameToJoin = () => {
     }
   }
   return null;
+};
+
+const startTimer = (
+  previous: NodeJS.Timeout | undefined,
+  socket: MySocket,
+  socketLoses: boolean
+): NodeJS.Timeout => {
+  if (previous) {
+    clearTimeout(previous);
+  }
+  return setTimeout(() => {
+    socket.broadcast.in(socket.data.gameId).emit("gameEnd", socketLoses);
+    socket.emit("gameEnd", !socketLoses);
+
+    delete db[socket.data.gameId];
+  }, (timerMax + 1) * 1000);
 };
 
 // Sort connections by type of connection and connection count

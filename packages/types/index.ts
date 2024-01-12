@@ -32,10 +32,14 @@ export const opponentTurnValidator = z.object({
 });
 type OpponentTurn = z.infer<typeof opponentTurnValidator>;
 
+export const isWinnerValidator = z.boolean();
+type IsWinner = z.infer<typeof isStartingPlayerValidator>;
+
 export type ServerToClientEvents = {
   gameStart: (isStartingPlayer: IsStartingPlayer) => void;
   opponentTurn: (value: OpponentTurn) => void;
   opponentDisconnected: () => void;
+  gameEnd: (isWinner: IsWinner) => void;
 };
 
 export type ClientToServerEvents = {
