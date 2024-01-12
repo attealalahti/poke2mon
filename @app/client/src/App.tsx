@@ -11,7 +11,7 @@ import type {
 } from "@poke2mon/types";
 import {
   pokemonCallbackValueValidator,
-  isStartingPlayerValidator,
+  gameStartInfoValidator,
   opponentTurnValidator,
   isWinnerValidator,
 } from "@poke2mon/types";
@@ -29,6 +29,7 @@ export type Color = "primary" | "secondary" | "neutral";
 
 function App() {
   const [searchText, setSearchText] = useState<string>("");
+  const [startingPokemon, setStartingPokemon] = useState<string>("");
   const [turns, setTurns] = useState<TurnProps[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -69,17 +70,18 @@ function App() {
       console.log("connected");
     });
 
-    socket.on("gameStart", (isStartingPlayer) => {
-      const parseResult = isStartingPlayerValidator.safeParse(isStartingPlayer);
+    socket.on("gameStart", (gameStartInfo) => {
+      const parseResult = gameStartInfoValidator.safeParse(gameStartInfo);
       if (!parseResult.success) {
         // Server error
         return;
       }
       setInGame(true);
+      setStartingPokemon(gameStartInfo.startingPokemon);
       startTimer();
-      if (!isStartingPlayer) {
+      if (!gameStartInfo.isStartingPlayer) {
         setIsLoading(true);
-        setSearchText("Waiting for opponent...");
+        setSearchText("Opponent's turn...");
       }
     });
 
@@ -155,7 +157,7 @@ function App() {
           connections: value.connections,
         };
         setTurns((prev) => [newTurn, ...prev]);
-        setSearchText("Waiting for opponent...");
+        setSearchText("Opponent's turn...");
         startTimer();
       }
     });
@@ -263,7 +265,7 @@ function App() {
             {turns.map((turnProps, index) => (
               <Turn key={index} {...turnProps} />
             ))}
-            <Pokemon name="Pikachu" color="neutral" number={1} />
+            <Pokemon name={startingPokemon} color="neutral" number={1} />
             <span className="border-primary-content bg-primary text-primary-content" />
             <span className="border-secondary-content bg-secondary text-secondary-content" />
             <span className="border-neutral-content bg-neutral text-neutral-content" />

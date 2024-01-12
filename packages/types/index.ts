@@ -23,8 +23,11 @@ export const pokemonCallbackValueValidator = z
   );
 type PokemonCallbackValue = z.infer<typeof pokemonCallbackValueValidator>;
 
-export const isStartingPlayerValidator = z.boolean();
-type IsStartingPlayer = z.infer<typeof isStartingPlayerValidator>;
+export const gameStartInfoValidator = z.object({
+  isStartingPlayer: z.boolean(),
+  startingPokemon: z.string(),
+});
+type GameStartInfo = z.infer<typeof gameStartInfoValidator>;
 
 export const opponentTurnValidator = z.object({
   pokemon: z.string(),
@@ -33,10 +36,10 @@ export const opponentTurnValidator = z.object({
 type OpponentTurn = z.infer<typeof opponentTurnValidator>;
 
 export const isWinnerValidator = z.boolean();
-type IsWinner = z.infer<typeof isStartingPlayerValidator>;
+type IsWinner = z.infer<typeof isWinnerValidator>;
 
 export type ServerToClientEvents = {
-  gameStart: (isStartingPlayer: IsStartingPlayer) => void;
+  gameStart: (isStartingPlayer: GameStartInfo) => void;
   opponentTurn: (value: OpponentTurn) => void;
   opponentDisconnected: () => void;
   gameEnd: (isWinner: IsWinner) => void;

@@ -44,7 +44,30 @@ const io = new Server<
   },
 });
 
-const startingPokemon = "pikachu";
+// Removes dashes between each word and capitalizes each word
+const prettify = (text: string) => {
+  const split = text.split("-");
+  const capitalized = split.map((word) => {
+    const firstLetter = word.charAt(0).toUpperCase();
+    const rest = word.slice(1);
+    return firstLetter + rest;
+  });
+  const joined = capitalized.join(" ");
+  return joined;
+};
+
+// Same as prettify but includes exceptions for specific Pokemon
+const prettifyPokemonName = (name: string): string => {
+  const prettyName = pokemonNames[name];
+  if (prettyName) {
+    return prettyName;
+  } else {
+    return name;
+  }
+};
+
+const startingPokemon = "rotom-wash";
+const prettyStartingPokemon = prettifyPokemonName(startingPokemon);
 
 const db: { [key: string]: Game } = {};
 
@@ -74,10 +97,14 @@ io.on("connection", async (socket) => {
       socket.data.gameId = existingGameId;
 
       const thisPlayerStarts = Math.random() > 0.5;
-      socket.broadcast
-        .in(socket.data.gameId)
-        .emit("gameStart", !thisPlayerStarts);
-      socket.emit("gameStart", thisPlayerStarts);
+      socket.broadcast.in(socket.data.gameId).emit("gameStart", {
+        isStartingPlayer: !thisPlayerStarts,
+        startingPokemon: prettyStartingPokemon,
+      });
+      socket.emit("gameStart", {
+        isStartingPlayer: thisPlayerStarts,
+        startingPokemon: prettyStartingPokemon,
+      });
       db[existingGameId]!!.timer = startTimer(
         db[existingGameId]!!.timer,
         socket,
@@ -249,28 +276,6 @@ const getOrderByFirstLetter = (word: string) => {
     return 2;
   } else {
     return 3;
-  }
-};
-
-// Removes dashes between each word and capitalizes each word
-const prettify = (text: string) => {
-  const split = text.split("-");
-  const capitalized = split.map((word) => {
-    const firstLetter = word.charAt(0).toUpperCase();
-    const rest = word.slice(1);
-    return firstLetter + rest;
-  });
-  const joined = capitalized.join(" ");
-  return joined;
-};
-
-// Same as prettify but includes exceptions for specific Pokemon
-const prettifyPokemonName = (name: string): string => {
-  const prettyName = pokemonNames[name];
-  if (prettyName) {
-    return prettyName;
-  } else {
-    return name;
   }
 };
 
