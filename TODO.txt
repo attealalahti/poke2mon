@@ -4,5 +4,4 @@ database
 how to play
 win/loss record
 opponent mistakes
-handle disconnects
 handle game end

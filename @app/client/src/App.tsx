@@ -31,11 +31,14 @@ function App() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const [inGame, setInGame] = useState<boolean>(false);
+  const [opponentDisconnected, setOpponentDisconnected] =
+    useState<boolean>(false);
 
   useEffect(() => {
     socket.on("connect", () => {
       console.log("connected");
     });
+
     socket.on("gameStart", (isStartingPlayer) => {
       const parseResult = isStartingPlayerValidator.safeParse(isStartingPlayer);
       if (!parseResult.success) {
@@ -48,6 +51,7 @@ function App() {
         setSearchText("Waiting for opponent...");
       }
     });
+
     socket.on("opponentTurn", (value) => {
       const parseResult = opponentTurnValidator.safeParse(value);
       if (!parseResult.success) {
@@ -64,10 +68,16 @@ function App() {
       setIsLoading(false);
       setSearchText("");
     });
+
+    socket.on("opponentDisconnected", () => {
+      setOpponentDisconnected(true);
+    });
+
     return () => {
       socket.off("connect");
       socket.off("gameStart");
       socket.off("opponentTurn");
+      socket.off("opponentDisconnected");
     };
   }, [turns.length]);
 
@@ -114,7 +124,24 @@ function App() {
           POKÉ<span className="text-primary">2</span>MON
         </h1>
       </div>
-      {inGame ? (
+      {opponentDisconnected ? (
+        <div role="alert" className="alert alert-error">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6 shrink-0 stroke-current"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <span className="font-semibold">Opponent disconnected</span>
+        </div>
+      ) : inGame ? (
         <>
           <div className="relative flex w-full flex-row font-semibold">
             <input

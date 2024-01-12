@@ -35,6 +35,7 @@ type OpponentTurn = z.infer<typeof opponentTurnValidator>;
 export type ServerToClientEvents = {
   gameStart: (isStartingPlayer: IsStartingPlayer) => void;
   opponentTurn: (value: OpponentTurn) => void;
+  opponentDisconnected: () => void;
 };
 
 export type ClientToServerEvents = {

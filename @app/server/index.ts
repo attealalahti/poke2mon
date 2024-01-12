@@ -45,9 +45,18 @@ io.on("connection", async (socket) => {
 
   socket.on("disconnect", () => {
     console.log(`${socket.id} socket disconnected`);
+    setTimeout(() => {
+      if (!socket.connected) {
+        if (socket.data.gameId) {
+          socket.broadcast.in(socket.data.gameId).emit("opponentDisconnected");
+          delete db[socket.data.gameId];
+        }
+      }
+    }, 8000);
   });
 
   try {
+    // Find game to join, if not, create a game
     const existingGameId = findGameToJoin();
     if (existingGameId) {
       db[existingGameId]?.players.push(socket.id);
@@ -55,7 +64,9 @@ io.on("connection", async (socket) => {
       socket.data.gameId = existingGameId;
 
       const thisPlayerStarts = Math.random() > 0.5;
-      socket.broadcast.emit("gameStart", !thisPlayerStarts);
+      socket.broadcast
+        .in(socket.data.gameId)
+        .emit("gameStart", !thisPlayerStarts);
       socket.emit("gameStart", thisPlayerStarts);
     } else {
       const newGameId = randomUUID();
@@ -157,7 +168,7 @@ io.on("connection", async (socket) => {
           pokemon: prettyPokemonName,
           connections: connectionsToSend,
         });
-        socket.broadcast.emit("opponentTurn", {
+        socket.broadcast.in(socket.data.gameId).emit("opponentTurn", {
           pokemon: prettyPokemonName,
           connections: connectionsToSend,
         });
