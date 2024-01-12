@@ -2,8 +2,8 @@
   "name": "@poke2mon/data",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/pokemon.js",
-  "types": "dist/pokemon.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/*.d.ts",
   "scripts": {
     "start": "tsc && node dist",
     "build": "tsc --build --verbose"

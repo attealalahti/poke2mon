@@ -5,3 +5,4 @@ how to play
 win/loss record
 opponent mistakes
 handle game end
+initial pokemon on game start

@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { io } from "socket.io-client";
 import type { Socket } from "socket.io-client";
 import Pokemon from "./components/Pokemon";
 import Turn, { TurnProps } from "./components/Turn";
-import pokemonNames from "@poke2mon/data";
+import pokemonNames from "@poke2mon/data/dist/pokemon";
+import { timerMax } from "@poke2mon/data";
 import type {
   ClientToServerEvents,
   ServerToClientEvents,
@@ -18,6 +19,7 @@ const pokemonList = Object.keys(pokemonNames).map((key) => ({
   key,
   name: pokemonNames[key],
 }));
+
 const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io(
   "http://localhost:3000",
 );
@@ -33,6 +35,30 @@ function App() {
   const [inGame, setInGame] = useState<boolean>(false);
   const [opponentDisconnected, setOpponentDisconnected] =
     useState<boolean>(false);
+  const [timer, setTimer] = useState<number>(timerMax);
+  const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(
+    null,
+  );
+
+  const startTimer = useCallback(() => {
+    if (timerInterval) {
+      clearInterval(timerInterval);
+    }
+    setTimer(timerMax);
+
+    const interval = setInterval(() => {
+      setTimer((prev) => {
+        if (prev > 0) {
+          return prev - 1;
+        } else {
+          clearInterval(interval);
+          return prev;
+        }
+      });
+    }, 1000);
+
+    setTimerInterval(interval);
+  }, [timerInterval]);
 
   useEffect(() => {
     socket.on("connect", () => {
@@ -46,6 +72,7 @@ function App() {
         return;
       }
       setInGame(true);
+      startTimer();
       if (!isStartingPlayer) {
         setIsLoading(true);
         setSearchText("Waiting for opponent...");
@@ -67,6 +94,7 @@ function App() {
       setTurns((prev) => [newTurn, ...prev]);
       setIsLoading(false);
       setSearchText("");
+      startTimer();
     });
 
     socket.on("opponentDisconnected", () => {
@@ -79,7 +107,7 @@ function App() {
       socket.off("opponentTurn");
       socket.off("opponentDisconnected");
     };
-  }, [turns.length]);
+  }, [turns.length, startTimer]);
 
   useEffect(() => {
     if (!isLoading) {
@@ -110,6 +138,7 @@ function App() {
         };
         setTurns((prev) => [newTurn, ...prev]);
         setSearchText("Waiting for opponent...");
+        startTimer();
       }
     });
 
@@ -143,6 +172,13 @@ function App() {
         </div>
       ) : inGame ? (
         <>
+          <div className="flex items-center align-middle">
+            <div className="mask mask-squircle flex h-14 w-14 items-center bg-primary">
+              <div className="w-full text-center text-2xl font-bold text-primary-content">
+                {timer}
+              </div>
+            </div>
+          </div>
           <div className="relative flex w-full flex-row font-semibold">
             <input
               className="input input-bordered flex-1"
