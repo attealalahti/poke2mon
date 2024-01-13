@@ -113,6 +113,9 @@ function App() {
         // Server error
         return;
       }
+      if (opponentDisconnected) {
+        return;
+      }
       if (isWinner) {
         setGameState("won");
       } else {
@@ -127,7 +130,7 @@ function App() {
       socket.off("opponentDisconnected");
       socket.off("gameEnd");
     };
-  }, [turns.length, startTimer]);
+  }, [turns.length, startTimer, opponentDisconnected]);
 
   useEffect(() => {
     if (!isLoading) {
@@ -164,6 +167,7 @@ function App() {
 
     setSearchText(pokemonName);
     setIsLoading(true);
+    setError(null);
   };
 
   return (
