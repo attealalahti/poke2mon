@@ -16,6 +16,7 @@ import GameEnd from "./GameEnd";
 import Disconnection from "./Disconnection";
 import GameOngoing from "./GameOngoing";
 import GameStarting from "./GameStarting";
+import BackButton from "./BackButton";
 
 export type Color = "primary" | "secondary" | "neutral";
 export type GameState =
@@ -25,9 +26,12 @@ export type GameState =
   | "disconnected"
   | "starting";
 
-type Props = { socket: Socket<ServerToClientEvents, ClientToServerEvents> };
+type Props = {
+  socket: Socket<ServerToClientEvents, ClientToServerEvents>;
+  goBack: () => void;
+};
 
-const Game: React.FC<Props> = ({ socket }) => {
+const Game: React.FC<Props> = ({ socket, goBack }) => {
   const [searchText, setSearchText] = useState<string>("");
   const [startingPokemon, setStartingPokemon] = useState<string>("");
   const [turns, setTurns] = useState<TurnProps[]>([]);
@@ -175,6 +179,7 @@ const Game: React.FC<Props> = ({ socket }) => {
       />
       <GameEnd gameState={gameState} />
       <Disconnection gameState={gameState} />
+      <BackButton gameState={gameState} goBack={goBack} />
     </>
   );
 };

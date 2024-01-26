@@ -20,6 +20,10 @@ function App() {
     setIsInGame(true);
   };
 
+  const goBack = () => {
+    setIsInGame(false);
+  };
+
   return (
     <div className="m-auto flex max-w-xl flex-col items-center justify-center gap-8 p-4">
       <div className="w-full">
@@ -30,7 +34,7 @@ function App() {
           POKÉ<span className="text-primary">2</span>MON
         </h1>
       </div>
-      {isInGame && <Game socket={socket} />}
+      {isInGame && <Game socket={socket} goBack={goBack} />}
       {!isInGame && (
         <>
           <button onClick={startGame} className="btn btn-primary btn-lg">
