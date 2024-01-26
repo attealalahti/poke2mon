@@ -1,4 +1,4 @@
-import type { GameState } from "../App";
+import type { GameState } from "./Game";
 
 type Props = { gameState: GameState };
 

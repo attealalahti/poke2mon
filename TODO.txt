@@ -6,3 +6,4 @@ opponent mistakes
 main menu
 navigation
 rematch
+bans

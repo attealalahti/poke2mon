@@ -1,4 +1,4 @@
-import type { GameState } from "../App";
+import type { GameState } from "./Game";
 
 type Props = { gameState: GameState };
 
@@ -7,7 +7,7 @@ const GameStarting: React.FC<Props> = ({ gameState }) => {
 
   return (
     <div>
-      <div className="text-xl">Searching for opponent...</div>
+      <div className="text-center text-xl">Searching for opponent...</div>
       <div className="mt-4 flex flex-row justify-center align-middle">
         <span className="loading loading-infinity h-10 w-10" />
       </div>

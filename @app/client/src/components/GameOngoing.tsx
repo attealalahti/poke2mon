@@ -1,7 +1,7 @@
 import { useRef, useEffect } from "react";
 import Turn from "./Turn";
 import type { TurnProps } from "./Turn";
-import type { GameState } from "../App";
+import type { GameState } from "./Game";
 import Pokemon from "./Pokemon";
 import pokemonNames from "@poke2mon/data/dist/pokemon";
 

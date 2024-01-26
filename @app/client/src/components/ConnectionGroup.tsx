@@ -1,5 +1,5 @@
 import type { ConnectionProps } from "./Connection";
-import type { Color } from "../App";
+import type { Color } from "./Game";
 import Connection from "./Connection";
 
 type Props = {

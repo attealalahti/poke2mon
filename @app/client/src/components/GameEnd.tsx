@@ -1,4 +1,4 @@
-import type { GameState } from "../App";
+import type { GameState } from "./Game";
 
 type Props = { gameState: GameState };
 
@@ -7,7 +7,7 @@ const GameEnd: React.FC<Props> = ({ gameState }) => {
 
   const message = gameState === "won" ? "You won!" : "You lost.";
 
-  return <div className="text-3xl font-semibold">{message}</div>;
+  return <div className="text-center text-3xl font-semibold">{message}</div>;
 };
 
 export default GameEnd;

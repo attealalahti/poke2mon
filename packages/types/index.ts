@@ -46,6 +46,7 @@ export type ServerToClientEvents = {
 };
 
 export type ClientToServerEvents = {
+  play: () => void;
   pokemon: (
     name: PokemonParameter,
     callback: (value: PokemonCallbackValue) => void

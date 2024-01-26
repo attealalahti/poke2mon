@@ -55,10 +55,11 @@ const db: Db = {};
 io.on("connection", async (socket) => {
   console.log(`connected to socket ${socket.id}`);
 
+  socket.on("play", async () => {
+    await joinGame(db, socket);
+  });
+
   setDisconnectEvent(db, socket);
-
-  await joinGame(db, socket);
-
   setPokemonEvent(db, socket);
 });
 
@@ -126,6 +127,8 @@ export const startTimer = (
   return setTimeout(() => {
     socket.broadcast.in(socket.data.gameId).emit("gameEnd", socketLoses);
     socket.emit("gameEnd", !socketLoses);
+
+    io.in(socket.data.gameId).socketsLeave(socket.data.gameId);
 
     delete db[socket.data.gameId];
   }, (timerMax + 1) * 1000);

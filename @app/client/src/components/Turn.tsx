@@ -1,4 +1,4 @@
-import { Color } from "../App";
+import { Color } from "./Game";
 import type { ConnectionProps } from "./Connection";
 import ConnectionGroup from "./ConnectionGroup";
 import Pokemon from "./Pokemon";
