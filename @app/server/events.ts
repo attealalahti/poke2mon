@@ -4,13 +4,28 @@ import { pokemonParameterValidator } from "@poke2mon/types";
 import type { Connection } from "@poke2mon/types";
 import { prettifyPokemonName } from "./text";
 import { findConnections, sortConnections } from "./connections";
+import type { Server } from "socket.io";
+import {
+  ClientToServerEvents,
+  ServerToClientEvents,
+  InterServerEvents,
+  SocketData,
+} from "@poke2mon/types";
 
-export const setDisconnectEvent = (db: Db, socket: MySocket) => {
+type MyServer = Server<
+  ClientToServerEvents,
+  ServerToClientEvents,
+  InterServerEvents,
+  SocketData
+>;
+
+export const setDisconnectEvent = (db: Db, socket: MySocket, io: MyServer) => {
   socket.on("disconnect", () => {
     console.log(`${socket.id} socket disconnected`);
     setTimeout(() => {
       if (!socket.connected && socket.data.gameId) {
         socket.broadcast.in(socket.data.gameId).emit("opponentDisconnected");
+        io.in(socket.data.gameId).socketsLeave(socket.data.gameId);
         delete db[socket.data.gameId];
       }
     }, 8000);

@@ -12,6 +12,7 @@ import type {
 } from "@poke2mon/types";
 import { randomUUID } from "crypto";
 import { timerMax } from "@poke2mon/data";
+import pokemonNames from "@poke2mon/data/dist/pokemon";
 import { setDisconnectEvent, setPokemonEvent } from "./events";
 import { prettifyPokemonName } from "./text";
 
@@ -48,8 +49,6 @@ const io = new Server<
   },
 });
 
-const startingPokemon = "rotom-wash";
-const prettyStartingPokemon = prettifyPokemonName(startingPokemon);
 const db: Db = {};
 
 io.on("connection", async (socket) => {
@@ -59,12 +58,19 @@ io.on("connection", async (socket) => {
     await joinGame(db, socket);
   });
 
-  setDisconnectEvent(db, socket);
+  setDisconnectEvent(db, socket, io);
   setPokemonEvent(db, socket);
 });
 
 httpServer.listen(3000);
 console.log("socket.io server listening on http://localhost:3000");
+
+const getRandomPokemon = (): string => {
+  const pokemonNamesKeys = Object.keys(pokemonNames);
+  const randomIndex = Math.floor(Math.random() * pokemonNamesKeys.length);
+  const pokemon = pokemonNamesKeys[randomIndex];
+  return pokemon || "pikachu";
+};
 
 const joinGame = async (db: Db, socket: MySocket) => {
   try {
@@ -74,6 +80,11 @@ const joinGame = async (db: Db, socket: MySocket) => {
       db[existingGameId]!!.players.push(socket.id);
       socket.join(existingGameId);
       socket.data.gameId = existingGameId;
+
+      const startingPokemon = db[existingGameId]?.usedPokemon[0];
+      const prettyStartingPokemon = prettifyPokemonName(
+        startingPokemon || "pikachu"
+      );
 
       const thisPlayerStarts = Math.random() > 0.5;
       socket.broadcast.in(socket.data.gameId).emit("gameStart", {
@@ -91,6 +102,7 @@ const joinGame = async (db: Db, socket: MySocket) => {
       );
     } else {
       const newGameId = randomUUID();
+      const startingPokemon = getRandomPokemon();
       db[newGameId] = {
         id: newGameId,
         previousPokemon: await api.getPokemonByName(startingPokemon),
