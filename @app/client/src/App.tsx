@@ -15,6 +15,8 @@ import {
   opponentTurnValidator,
   isWinnerValidator,
 } from "@poke2mon/types";
+import GameEnd from "./components/GameEnd";
+import Disconnection from "./components/Disconnection";
 
 const pokemonList = Object.keys(pokemonNames).map((key) => ({
   key,
@@ -26,6 +28,12 @@ const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io(
 );
 
 export type Color = "primary" | "secondary" | "neutral";
+export type GameState =
+  | "ongoing"
+  | "won"
+  | "lost"
+  | "disconnected"
+  | "starting";
 
 function App() {
   const [searchText, setSearchText] = useState<string>("");
@@ -35,15 +43,11 @@ function App() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const [inGame, setInGame] = useState<boolean>(false);
-  const [opponentDisconnected, setOpponentDisconnected] =
-    useState<boolean>(false);
   const [timer, setTimer] = useState<number>(timerMax);
   const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(
     null,
   );
-  const [gameState, setGameState] = useState<"ongoing" | "won" | "lost">(
-    "ongoing",
-  );
+  const [gameState, setGameState] = useState<GameState>("ongoing");
 
   const startTimer = useCallback(() => {
     if (timerInterval) {
@@ -104,7 +108,10 @@ function App() {
     });
 
     socket.on("opponentDisconnected", () => {
-      setOpponentDisconnected(true);
+      setGameState((prev) => {
+        if (prev === "ongoing" || prev === "starting") return "disconnected";
+        return prev;
+      });
     });
 
     socket.on("gameEnd", (isWinner) => {
@@ -113,14 +120,11 @@ function App() {
         // Server error
         return;
       }
-      if (opponentDisconnected) {
-        return;
-      }
-      if (isWinner) {
-        setGameState("won");
-      } else {
-        setGameState("lost");
-      }
+      setGameState((prev) => {
+        if (prev === "disconnected") return prev;
+        if (isWinner) return "won";
+        return "lost";
+      });
     });
 
     return () => {
@@ -130,7 +134,7 @@ function App() {
       socket.off("opponentDisconnected");
       socket.off("gameEnd");
     };
-  }, [turns.length, startTimer, opponentDisconnected]);
+  }, [turns.length, startTimer]);
 
   useEffect(() => {
     if (!isLoading) {
@@ -177,28 +181,9 @@ function App() {
           POKÉ<span className="text-primary">2</span>MON
         </h1>
       </div>
-      {gameState === "won" ? (
-        <div className="text-3xl font-semibold">You won!</div>
-      ) : gameState === "lost" ? (
-        <div className="text-3xl font-semibold">You lost.</div>
-      ) : opponentDisconnected ? (
-        <div role="alert" className="alert alert-error">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6 shrink-0 stroke-current"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          <span className="font-semibold">Opponent disconnected</span>
-        </div>
-      ) : inGame ? (
+      <Disconnection gameState={gameState} />
+      <GameEnd gameState={gameState} />
+      {inGame ? (
         <>
           <div className="flex items-center align-middle">
             <div className="mask mask-squircle flex h-14 w-14 items-center bg-primary">
