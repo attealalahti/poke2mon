@@ -16,6 +16,7 @@ import {
 import GameEnd from "./components/GameEnd";
 import Disconnection from "./components/Disconnection";
 import GameOngoing from "./components/GameOngoing";
+import GameStarting from "./components/GameStarting";
 
 const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io(
   "http://localhost:3000",
@@ -169,6 +170,7 @@ function App() {
         </h1>
       </div>
       <Disconnection gameState={gameState} />
+      <GameStarting gameState={gameState} />
       <GameOngoing
         gameState={gameState}
         searchText={searchText}
@@ -181,14 +183,6 @@ function App() {
         turns={turns}
       />
       <GameEnd gameState={gameState} />
-      {gameState === "starting" && (
-        <div>
-          <div className="text-xl">Waiting for opponent...</div>
-          <div className="mt-4 flex flex-row justify-center align-middle">
-            <span className="loading loading-infinity h-10 w-10" />
-          </div>
-        </div>
-      )}
     </div>
   );
 }
