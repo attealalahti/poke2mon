@@ -1,9 +1,7 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { io } from "socket.io-client";
 import type { Socket } from "socket.io-client";
-import Pokemon from "./components/Pokemon";
-import Turn, { TurnProps } from "./components/Turn";
-import pokemonNames from "@poke2mon/data/dist/pokemon";
+import { TurnProps } from "./components/Turn";
 import { timerMax } from "@poke2mon/data";
 import type {
   ClientToServerEvents,
@@ -17,11 +15,7 @@ import {
 } from "@poke2mon/types";
 import GameEnd from "./components/GameEnd";
 import Disconnection from "./components/Disconnection";
-
-const pokemonList = Object.keys(pokemonNames).map((key) => ({
-  key,
-  name: pokemonNames[key],
-}));
+import GameOngoing from "./components/GameOngoing";
 
 const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io(
   "http://localhost:3000",
@@ -40,14 +34,12 @@ function App() {
   const [startingPokemon, setStartingPokemon] = useState<string>("");
   const [turns, setTurns] = useState<TurnProps[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [inGame, setInGame] = useState<boolean>(false);
+  const [isMyTurn, setIsMyTurn] = useState<boolean>(false);
   const [timer, setTimer] = useState<number>(timerMax);
   const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(
     null,
   );
-  const [gameState, setGameState] = useState<GameState>("ongoing");
+  const [gameState, setGameState] = useState<GameState>("starting");
 
   const startTimer = useCallback(() => {
     if (timerInterval) {
@@ -80,11 +72,12 @@ function App() {
         // Server error
         return;
       }
-      setInGame(true);
+      setGameState("ongoing");
       setStartingPokemon(gameStartInfo.startingPokemon);
       startTimer();
-      if (!gameStartInfo.isStartingPlayer) {
-        setIsLoading(true);
+      if (gameStartInfo.isStartingPlayer) {
+        setIsMyTurn(true);
+      } else {
         setSearchText("Opponent's turn...");
       }
     });
@@ -102,7 +95,7 @@ function App() {
         connections: value.connections,
       };
       setTurns((prev) => [newTurn, ...prev]);
-      setIsLoading(false);
+      setIsMyTurn(true);
       setSearchText("");
       startTimer();
     });
@@ -136,24 +129,18 @@ function App() {
     };
   }, [turns.length, startTimer]);
 
-  useEffect(() => {
-    if (!isLoading) {
-      inputRef.current?.focus();
-    }
-  }, [isLoading]);
-
   const sendPokemon = (pokemonKey: string, pokemonName: string) => {
-    if (isLoading) return;
+    if (!isMyTurn) return;
 
     socket.emit("pokemon", pokemonKey, (value) => {
       const parseResult = pokemonCallbackValueValidator.safeParse(value);
       if (!parseResult.success) {
         setError("Server Error - Try again");
-        setIsLoading(false);
+        setIsMyTurn(true);
         setSearchText("");
       } else if (value.error) {
         setError(value.errorMessage);
-        setIsLoading(false);
+        setIsMyTurn(true);
         setSearchText("");
       } else {
         setError(null);
@@ -170,7 +157,7 @@ function App() {
     });
 
     setSearchText(pokemonName);
-    setIsLoading(true);
+    setIsMyTurn(false);
     setError(null);
   };
 
@@ -182,85 +169,19 @@ function App() {
         </h1>
       </div>
       <Disconnection gameState={gameState} />
+      <GameOngoing
+        gameState={gameState}
+        searchText={searchText}
+        setSearchText={setSearchText}
+        timer={timer}
+        isMyTurn={isMyTurn}
+        startingPokemon={startingPokemon}
+        sendPokemon={sendPokemon}
+        error={error}
+        turns={turns}
+      />
       <GameEnd gameState={gameState} />
-      {inGame ? (
-        <>
-          <div className="flex items-center align-middle">
-            <div className="mask mask-squircle flex h-14 w-14 items-center bg-primary">
-              <div className="w-full text-center text-2xl font-bold text-primary-content">
-                {timer}
-              </div>
-            </div>
-          </div>
-          <div className="relative flex w-full flex-row font-semibold">
-            <input
-              className="input input-bordered flex-1"
-              type="search"
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              disabled={isLoading}
-              ref={inputRef}
-              placeholder="Search for Pokémon..."
-            />
-            {!isLoading &&
-              searchText.length >= 3 &&
-              pokemonList.some((pokemon) =>
-                pokemon.name.toLowerCase().includes(searchText.toLowerCase()),
-              ) && (
-                <div className="absolute top-full z-20 w-full px-2">
-                  <div className="w-full border-x border-t border-base-content bg-base-100">
-                    {pokemonList
-                      .filter((pokemon) =>
-                        pokemon.name
-                          .toLowerCase()
-                          .includes(searchText.toLowerCase()),
-                      )
-                      .slice(0, 7)
-                      .map((pokemon, index) => (
-                        <button
-                          key={index}
-                          onClick={() => sendPokemon(pokemon.key, pokemon.name)}
-                          className="w-full border-b border-base-content p-2 text-left hover:bg-primary hover:text-primary-content focus:bg-primary focus:text-primary-content"
-                        >
-                          {pokemon.name}
-                        </button>
-                      ))}
-                  </div>
-                </div>
-              )}
-            {isLoading && (
-              <span className="loading loading-dots absolute right-4 top-1/3" />
-            )}
-          </div>
-          {error !== null && (
-            <div role="alert" className="alert alert-error">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6 shrink-0 stroke-current"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <span className="font-semibold">{error}</span>
-            </div>
-          )}
-          <div className="w-full px-4">
-            {turns.map((turnProps, index) => (
-              <Turn key={index} {...turnProps} />
-            ))}
-            <Pokemon name={startingPokemon} color="neutral" number={1} />
-            <span className="border-primary-content bg-primary text-primary-content" />
-            <span className="border-secondary-content bg-secondary text-secondary-content" />
-            <span className="border-neutral-content bg-neutral text-neutral-content" />
-          </div>
-        </>
-      ) : (
+      {gameState === "starting" && (
         <div>
           <div className="text-xl">Waiting for opponent...</div>
           <div className="mt-4 flex flex-row justify-center align-middle">

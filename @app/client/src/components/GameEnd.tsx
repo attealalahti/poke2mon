@@ -3,7 +3,7 @@ import type { GameState } from "../App";
 type Props = { gameState: GameState };
 
 const GameEnd: React.FC<Props> = ({ gameState }) => {
-  if (gameState === "ongoing") return null;
+  if (gameState !== "won" && gameState !== "lost") return null;
 
   const message = gameState === "won" ? "You won!" : "You lost.";
 
