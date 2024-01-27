@@ -12,7 +12,9 @@ import Turn from "./components/Turn";
 
 console.log(process.env.SOCKET_IO_URL);
 const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io(
-  process.env.SOCKET_IO_URL || "http://localhost:3000",
+  process.env.VERCEL
+    ? (process.env.SOCKET_IO_URL as string)
+    : "http://localhost:3000",
 );
 
 function App() {
