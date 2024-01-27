@@ -13,7 +13,11 @@ export default defineConfig({
   },
   build: {
     commonjsOptions: {
-      include: [/node_modules/, /@poke2mon/],
+      include: [
+        /node_modules/,
+        "../../packages/data/dist/*",
+        "../../packages/types/dist/*",
+      ],
     },
   },
 });
