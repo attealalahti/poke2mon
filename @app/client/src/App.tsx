@@ -9,10 +9,8 @@ import { useState } from "react";
 import ThemeSwapButton from "./components/ThemeSwapButton";
 import Pokemon from "./components/Pokemon";
 import Turn from "./components/Turn";
-import { config } from "dotenv";
 
-config();
-
+console.log(process.env.SOCKET_IO_URL);
 const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io(
   process.env.SOCKET_IO_URL || "http://localhost:3000",
 );

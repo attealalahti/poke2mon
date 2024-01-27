@@ -15,7 +15,6 @@
     "@poke2mon/server": "^1.0.0",
     "@poke2mon/types": "^1.0.0",
     "autoprefixer": "^10.4.16",
-    "dotenv": "^16.4.1",
     "postcss": "^8.4.33",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
