@@ -10,9 +10,9 @@ import ThemeSwapButton from "./components/ThemeSwapButton";
 import Pokemon from "./components/Pokemon";
 import Turn from "./components/Turn";
 
-console.log(import.meta.env);
 const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io(
   import.meta.env.VITE_SOCKET_IO_URL || "http://localhost:3000",
+  { rejectUnauthorized: false },
 );
 
 function App() {
