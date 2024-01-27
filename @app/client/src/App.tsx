@@ -12,7 +12,6 @@ import Turn from "./components/Turn";
 
 const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io(
   import.meta.env.VITE_SOCKET_IO_URL || "http://localhost:3000",
-  { rejectUnauthorized: false },
 );
 
 function App() {

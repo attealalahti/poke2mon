@@ -65,13 +65,13 @@ io.on("connection", async (socket) => {
 });
 
 const url = process.env.RAILWAY_PUBLIC_DOMAIN
-  ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}:3000`
+  ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}:${process.env.PORT || 3000}`
   : "http://localhost:3000";
 
 /*httpServer.listen(3000, () => {
   console.log(`socket.io server listening at ${url}`);
 });*/
-io.listen(3000);
+io.listen(Number(process.env.PORT || 3000));
 console.log(`socket.io server listening at ${url}`);
 
 const getRandomPokemon = (): string => {
