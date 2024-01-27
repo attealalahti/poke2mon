@@ -11,4 +11,9 @@ export default defineConfig({
       "@poke2mon/types",
     ],
   },
+  build: {
+    commonjsOptions: {
+      include: [/node_modules/, /@poke2mon/],
+    },
+  },
 });
