@@ -11,7 +11,7 @@ import Pokemon from "./components/Pokemon";
 import Turn from "./components/Turn";
 
 const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io(
-  "http://localhost:3000",
+  process.env.SOCKET_IO_URL || "http://localhost:3000",
 );
 
 function App() {
