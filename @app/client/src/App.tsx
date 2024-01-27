@@ -10,7 +10,7 @@ import ThemeSwapButton from "./components/ThemeSwapButton";
 import Pokemon from "./components/Pokemon";
 import Turn from "./components/Turn";
 
-console.log(process.env.SOCKET_IO_URL);
+console.log(process.env);
 const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io(
   process.env.VERCEL
     ? (process.env.SOCKET_IO_URL as string)
