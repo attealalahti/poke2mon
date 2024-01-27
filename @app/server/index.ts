@@ -36,18 +36,20 @@ export type MySocket = Socket<
 
 export const api = new PokemonClient();
 
-const app = express();
-const httpServer = createServer(app);
+//const app = express();
+//const httpServer = createServer(app);
 const io = new Server<
   ClientToServerEvents,
   ServerToClientEvents,
   InterServerEvents,
   SocketData
->(httpServer, {
-  cors: {
-    origin: process.env.CLIENT_URL || "http://127.0.0.1:5173",
-  },
-});
+>(
+  /*httpServer,*/ {
+    cors: {
+      origin: process.env.CLIENT_URL || "http://127.0.0.1:5173",
+    },
+  }
+);
 
 const db: Db = {};
 
@@ -62,13 +64,15 @@ io.on("connection", async (socket) => {
   setPokemonEvent(db, socket);
 });
 
-httpServer.listen(3000);
-
 const url = process.env.RAILWAY_PUBLIC_DOMAIN
   ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}:3000`
   : "http://localhost:3000";
 
-console.log(`socket.io server listening on ${url}`);
+/*httpServer.listen(3000, () => {
+  console.log(`socket.io server listening at ${url}`);
+});*/
+io.listen(3000);
+console.log(`socket.io server listening at ${url}`);
 
 const getRandomPokemon = (): string => {
   const pokemonNamesKeys = Object.keys(pokemonNames);
