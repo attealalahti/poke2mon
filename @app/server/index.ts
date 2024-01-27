@@ -45,7 +45,7 @@ const io = new Server<
   SocketData
 >(httpServer, {
   cors: {
-    origin: "http://127.0.0.1:5173",
+    origin: process.env.CLIENT_URL || "http://127.0.0.1:5173",
   },
 });
 
@@ -63,7 +63,12 @@ io.on("connection", async (socket) => {
 });
 
 httpServer.listen(3000);
-console.log("socket.io server listening on http://localhost:3000");
+
+const url = process.env.RAILWAY_PUBLIC_DOMAIN
+  ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}:3000`
+  : "http://localhost:3000";
+
+console.log(`socket.io server listening on ${url}`);
 
 const getRandomPokemon = (): string => {
   const pokemonNamesKeys = Object.keys(pokemonNames);

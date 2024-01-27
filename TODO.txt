@@ -1,9 +1,6 @@
 lifelines
 database
-how to play
 win/loss record
 opponent mistakes
-main menu
-navigation
 rematch
 bans
